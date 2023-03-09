@@ -33,7 +33,7 @@ if __name__ == '__main__':
     sdr.ReadData()
 
     # Set input size
-    num_input = 1
+    NUM_INPUT = 1
     # Get input and output data in numpy array form
     XTrain, YTrain = sdr.XTrain, sdr.YTrain
     # Create PyTorch dataset from numpy arrays
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     # Use Mean Squared Error loss function because we are doing regression and not classification.
     # If we were doing classification, we would use Cross Entropy loss function.
     loss_func = nn.MSELoss()
-    model = Model(num_input)
+    model = Model(NUM_INPUT)
     # Define optimizer for model parameters
     optimizer = Adam(model.parameters(), lr=1e-2)
 
@@ -67,6 +67,7 @@ if __name__ == '__main__':
             # Forward pass through the model to get predictions
             pred = model(batch_x)
             # Calculate loss between predictions and true values
+            # This is the averaged loss for the batch, not the sum
             loss = loss_func(pred, batch_y)
             # Store loss value for the batch
             b_loss.append(loss.cpu().data.numpy())
@@ -79,9 +80,9 @@ if __name__ == '__main__':
         e_loss.append(np.mean(b_loss))
         # Print mean loss for the epoch every 20 epochs
         if epoch % 20 == 0:
-            print("Epoch: %d, Loss: %.5f" % (epoch, np.mean(b_loss)))
+            print(f"Epoch: {epoch}, Loss: {np.mean(b_loss):.5f}")
     # Plot mean loss versus epoch
-    plt.plot([i for i in range(max_epoch)], e_loss)
+    plt.plot(e_loss)
     plt.xlabel('Epoch')
     plt.ylabel('Mean loss')
     plt.show()
