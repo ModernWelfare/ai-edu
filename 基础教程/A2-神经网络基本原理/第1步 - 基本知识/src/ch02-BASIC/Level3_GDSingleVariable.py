@@ -4,39 +4,63 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def target_function(x):
-    y = x*x
+def target_function(x: float) -> float:
+    """
+    Returns the value of the quadratic function x^2 at the given input.
+
+    Args:
+        x (float): The input to the quadratic function.
+
+    Returns:
+        float: The value of the quadratic function at the given input.
+    """
+    y = x ** 2
     return y
 
-def derivative_function(x):
-    return 2*x
+def derivative_function(x: float) -> float:
+    """
+    Returns the derivative of the quadratic function x^2 at the given input.
 
-def draw_function():
-    x = np.linspace(-1.2,1.2)
+    Args:
+        x (float): The input to the quadratic function.
+
+    Returns:
+        float: The value of the derivative of the quadratic function at the given input.
+    """
+    dy_dx = 2 * x
+    return dy_dx
+
+def plot_function() -> None:
+    """
+    Plots the quadratic function x^2 in the range [-1.2, 1.2].
+    """
+    x = np.linspace(-1.2, 1.2)
     y = target_function(x)
-    plt.plot(x,y)
+    plt.plot(x, y)
 
-def draw_gd(X):
-    Y = []
-    for i in range(len(X)):
-        Y.append(target_function(X[i]))
-    
-    plt.plot(X,Y)
+def plot_gradient_descent(X: list[float]) -> None:
+    """
+    Plots the gradient descent path of the quadratic function x^2, given a list of X values.
+
+    Args:
+        X (list[float]): A list of x values representing the path of the gradient descent.
+    """
+    Y = [target_function(x) for x in X]
+    plt.plot(X, Y)
 
 if __name__ == '__main__':
     x = 1.2
     eta = 0.4
     error = 1e-3
-    X = []
-    X.append(x)
+    X = [x]
+
     y = target_function(x)
     while y > error:
-        x = x - eta * derivative_function(x)
+        x -= eta * derivative_function(x)
         X.append(x)
         y = target_function(x)
-        print("x=%f, y=%f" %(x,y))
+        print(f"x={x:.3f}, y={y:.3f}")
 
-    draw_function()
-    draw_gd(X)
+    plot_function()
+    plot_gradient_descent(X)
     plt.show()
-
