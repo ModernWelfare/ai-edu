@@ -25,7 +25,7 @@ def draw_gd(X):
 
 if __name__ == '__main__':
     x = 1.2
-    eta = 0.3
+    eta = 0.4
     error = 1e-3
     X = []
     X.append(x)
@@ -35,7 +35,6 @@ if __name__ == '__main__':
         X.append(x)
         y = target_function(x)
         print("x=%f, y=%f" %(x,y))
-
 
     draw_function()
     draw_gd(X)

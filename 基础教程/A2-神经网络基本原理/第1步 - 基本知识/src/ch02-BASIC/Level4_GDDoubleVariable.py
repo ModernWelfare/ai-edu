@@ -3,7 +3,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 def target_function(x,y):
     J = x**2 + np.sin(y)**2
