@@ -22,11 +22,3 @@ if __name__=='__main__':
     print(y)
     exit()
 
-    steps = np.linspace(0, np.pi*2, 100)
-    x = np.sin(steps)
-    y = np.cos(steps)
-    plt.plot(x)
-    plt.plot(y)
-    plt.show()
-
-

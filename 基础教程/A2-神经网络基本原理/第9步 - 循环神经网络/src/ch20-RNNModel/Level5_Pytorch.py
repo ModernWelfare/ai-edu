@@ -46,17 +46,23 @@ class LSTM(nn.Module):
         super(LSTM, self).__init__()
         self.rnn = nn.LSTM(
             input_size=2,          # character num.
-            hidden_size=4,         # RNN or LSTM hidden layer, 设置的稍大一些可能效果更佳，此处仅作对比
+            hidden_size=8,         # RNN or LSTM hidden layer, 设置的稍大一些可能效果更佳，此处仅作对比
             num_layers=1,
             batch_first=True,
-            bidirectional=True,      # 双向LSTM, 若设置为False,对应hidden_size增大两倍
-
+            bidirectional=False,      # 双向LSTM, 若设置为False,对应hidden_size增大两倍
         )
         self.softmax = nn.Softmax()         # classification, softmax
         self.fc = nn.Linear(8, 2)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
+        # get the output of the last time step, r_out shape (batch, time_step, output_size)
+        # h_n is the hidden state of the last time step, shape (n_layers, batch, hidden_size)
+        # h_c is the cell state of the last time step, shape (n_layers, batch, hidden_size)
+        # hidden state is used to store the information of the short-term dependencies
+        # cell state is used to store the information of the long-term dependencies
+        # x is the input of the last time step, shape (batch, input_size)
+        # None is the initial hidden state, shape (n_layers, batch, hidden_size)
         r_out, (h_n, h_c) = self.rnn(x, None)           # 多对多的序列            (2, 4, 8)
         out = self.fc(r_out)                            # 0和1是二分类问题       （2, 4, 2)
         out = self.sigmoid(out)
@@ -73,19 +79,19 @@ class GRU(nn.Module):
             bidirectional=True,      # 双向GRU, 若设置为False,对应hidden_size增大两倍
 
         )
-        self.softmax = nn.Softmax()         # classification, softmax
         self.fc = nn.Linear(8, 2)
+        # Use sigmoid to classify because it is a binary classification problem
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        r_out, (h_n, h_c) = self.rnn(x, None)           # 多对多的序列            (2, 4, 8)
-        out = self.fc(r_out)                            # 0和1是二分类问题       （2, 4, 2)
+        # get the output of the last time step, r_out shape (batch, sequence_length, output_size)
+        r_out, (h_n, h_c) = self.rnn(x, None)
+        out = self.fc(r_out)
         out = self.sigmoid(out)
         return out
 
 def accracy_score(pred, label):
     """
-
     :param pred:  prediction
     :param label:   real_label
     :return:    Accuracy score
@@ -104,16 +110,17 @@ if __name__ == '__main__':
     max_epoch = 100      # hyper-parameters
     lr = 1e-2
     batch_size = 2
-    # rnn = LSTM()        # LSTM  model
-    rnn = GRU()         # GRU model
+    rnn = LSTM()        # LSTM  model
+    # rnn = GRU()         # GRU model
     rnn.apply(weights_init)
 
     # Data processing
     dataReader = load_data()
     X, XTest, Y, YTest = process_data(dataReader)      # X ---  (136, 4, 2)
-    tensor_X, tensor_Y = torch.FloatTensor(XTest), torch.LongTensor(YTest)      # transform numpy to tensor
+    # transform numpy to tensor
+    tensor_X, tensor_Y = torch.FloatTensor(XTest), torch.LongTensor(YTest)      
     torch_dataset = TensorDataset(torch.FloatTensor(X), torch.LongTensor(Y))
-    train_loader = DataLoader(              # data loader class
+    train_loader = DataLoader(
         dataset=torch_dataset,
         batch_size=batch_size,
         shuffle=True,
@@ -121,14 +128,17 @@ if __name__ == '__main__':
 
 
     optimizer = torch.optim.Adam(rnn.parameters(), lr=lr)
-    loss_func = nn.CrossEntropyLoss()       # classification  --- CrossEntropyLoss
+    loss_func = nn.CrossEntropyLoss()
 
-    plot_y_l = []               # record loss
-    plot_y_a = []               # record accuracy
+    # record loss
+    plot_y_l = []
+    # record accuracy               
+    plot_y_a = []               
     for epoch in range(max_epoch):
         for i, (batch_X, batch_Y) in enumerate(train_loader):
             num_data = batch_X.size(0)
-            batch_Y = batch_Y.view(batch_size*4, )             # (batch_size, 4) ---> (4*batch_size, ) 序列二分类
+            # (batch_size, 4) ---> (4*batch_size, ) 序列二分类
+            batch_Y = batch_Y.view(batch_size*4, )             
             optimizer.zero_grad()
             pred = rnn(batch_X).view(batch_size*4,2)
             loss = loss_func(pred, batch_Y)
@@ -143,11 +153,11 @@ if __name__ == '__main__':
         tensor_Y = tensor_Y.view(tensor_X.size(0)*4, )
         loss = loss_func(pred, tensor_Y)
         pred = pred.data.numpy()
-        # print(pred)
         accuracy = accracy_score(pred, YTest)
         plot_y_l.append(float(loss.data.numpy()))
         plot_y_a.append(accuracy)
         print("[Epoch:%d], Loss: %.5f, Accuracy: %.5f" % (epoch, loss.data.numpy(),accuracy))
+
     plt.subplot(121)
     plt.ylabel("Loss")
     plt.xlabel('Epoch')
